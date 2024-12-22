@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Quiz</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background-color: #f5f5f5;
+            color: #212529;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .quiz-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+
+        body.dark .quiz-container {
+            background: #1e1e1e;
+        }
+
+        .question {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .question-image {
+            width: 100%;
+            max-width: 600px;
+            margin: 1rem auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .option {
+            padding: 1rem;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        body.dark .option {
+            background: #333;
+            border-color: #444;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+        }
+
+        body.dark .option:hover {
+            background: #555;
+        }
+
+        .option.selected {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+
+        body.dark .option.selected {
+            background: #0056b3;
+            border-color: #004085;
+        }
+
+        .option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #1e7e34;
+        }
+
+        body.dark .option.correct {
+            background: #2d9c5b;
+            border-color: #218c3c;
+        }
+
+        .option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #bd2130;
+        }
+
+        body.dark .option.incorrect {
+            background: #a73d3d;
+            border-color: #9e2a2a;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .scores {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+
+        body.dark .scores {
+            background: #2a2a2a;
+            color: white;
+        }
+
+        .score-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .score-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        body.dark .score-list li {
+            border-color: #444;
+        }
+
+        body.dark .score-list li {
+            color: #ddd;
+        }
+
+        .toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            padding: 1rem;
+        }
+
+        .toggle-button {
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-button:hover {
+            background-color: #0056b3;
+        }
+
+        @media screen and (max-width: 600px) {
+            .quiz-container {
+                padding: 1rem;
+            }
+
+            .option {
+                padding: 1rem;
+            }
+
+            button {
+                padding: 0.6rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toggle-container">
+        <button id="themeToggle" class="toggle-button" aria-label="Switch theme">Switch to Dark Mode</button>
+    </div>
+    <div class="quiz-select-container">
+        <label for="quizSelector">Choose a Quiz :</label>
+        <select id="quizSelector">
+            <option value="Football">Football ⚽</option>
+            <option value="Basketball">Basketball 🏀</option>
+        </select>
+        <div id="timer" style="font-size: 1.2rem; margin-bottom: 1rem;">Time Left: 10s</div>
+
+    </div>
+
+    <div class="quiz-container">
+        <h1>Football Quiz</h1>
+        <div id="quiz">
+            <div id="question" class="question"></div>
+            <img 
+                src="Balon de Oro.webp" 
+                alt="Ballon d'Or Trophy" 
+                class="question-image" 
+                id="ballonImage" 
+                style="display: none;"
+            />
+            <div id="goalVideoContainer" style="display:none;">
+                <video id="goalVideo" style="width: 100%; max-width: 600px;" controls>
+                    <source src="ssstwitter-VEED.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div id="options" class="options"></div>
+            <button id="submit" disabled>Submit Answer</button>
+            <button id="next" style="display: none;">Next Question</button>
+        </div>
+        <div class="scores">
+            <h2>Previous Scores</h2>
+            <ul id="scoreList" class="score-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const themeToggleButton = document.getElementById('themeToggle');
+        const body = document.body;
+
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark');
+            themeToggleButton.textContent = 'Switch to Light Mode';
+        }
+
+        themeToggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark');
+            if (body.classList.contains('dark')) {
+                themeToggleButton.textContent = 'Switch to Light Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeToggleButton.textContent = 'Switch to Dark Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        const quizData = [
+            {
+                question: "Who won the 2022 Ballon d'Or ?",
+                options: [
+                    "Erling Haaland",
+                    "Karim Benzema",
+                    "Kylian Mbappé",
+                    "Messi"
+                ],
+                correct: 1,
+                image: "Balon de Oro.webp"
+            },
+            {
+                question: "Who is this player ?",
+                options: [
+                    "Ronaldo",
+                    "Yildiz",
+                    "Mitroglou",
+                    "The G.O.A.T"
+                ],
+                correct: 3,
+                image: "GOAL_-_Blank_WEB_-_Facebook_-_2023-06-13T135350.847.webp"
+            },
+            {
+                question: "Which club has won the most UEFA Champions League titles ?",
+                options: [
+                    "Real vardrid",
+                    "AC Milan",
+                    "Bayern Munich",
+                    "Liverpool"
+                ],
+                correct: 0,
+                image: "image.jpg"
+            },
+            {
+                question: "Which country won the 2022 FIFA World Cup ?",
+                options: [
+                    "France",
+                    "Brazil",
+                    "Argentina",
+                    "Germany"
+                ],
+                correct: 2,
+                image: "2022-World-Cup-006.jpg"
+            },
+            {
+                question: "Who is the all-time top scorer in Premier League history ?",
+                options: [
+                    "Wayne Rooney",
+                    "Alan Shearer",
+                    "Thierry Henry",
+                    "Harry Kane"
+                ],
+                correct: 1,
+                image: "top-10-premier-league-goalscorers-of-all-time-image.avif"
+            },
+            {
+                question: "Which team won the 2022-23 Premier League season ?",
+                options: [
+                    "Manchester City",
+                    "Arsenal",
+                    "Manchester United",
+                    "Liverpool"
+                ],
+                correct: 0,
+                image: "Premier-league-trophy.jpg"
+            },
+            {
+                question: "Who is this player ?",
+                options: [
+                    "Madueke",
+                    "Salah",
+                    "Raphinha",
+                    "Neymar"
+                ],
+                correct: 2,
+                image: "GeoQZe7WEAAcRyc.jpg"
+            },
+            {
+                question: "How many Champions league titles have AC Milan ?",
+                options: [
+                    "6",
+                    "7",
+                    "10",
+                    "5"
+                ],
+                correct: 1,
+                image: "Champions-League.webp"
+            },
+            {
+                question: "The mythic FC Barcelona was created in : ",
+                options: [
+                    "1899",
+                    "1898",
+                    "1902",
+                    "1900"
+                ],
+                correct: 0,
+                image: "DCWcjjpXoAU2xpI.jpg"
+            },
+            {
+                question: "Which player scored this goal ?",
+                options: [
+                    "Arde Guler",
+                    "Messi",
+                    "Raphinha",
+                    "Lamine Yamal"
+                ],
+                correct: 3,
+                video: "ssstwitter-VEED.mp4"
+            }
+        ];
+        class Quiz {
+        constructor(quizData) {
+            this.quizData = quizData;
+            this.currentQuestion = 0;
+            this.score = 0;
+            this.selectedOption = null;
+
+            this.questionEl = document.getElementById('question');
+            this.imageEl = document.getElementById('ballonImage');
+            this.optionsEl = document.getElementById('options');
+            this.submitBtn = document.getElementById('submit');
+            this.nextBtn = document.getElementById('next');
+            this.scoreListEl = document.getElementById('scoreList');
+            this.goalVideoContainer = document.getElementById('goalVideoContainer');
+            this.videoEl = document.getElementById('goalVideo');
+
+            this.submitBtn.addEventListener('click', () => this.checkAnswer());
+            this.nextBtn.addEventListener('click', () => this.loadNextQuestion());
+
+            this.loadQuestion();
+            this.loadScores();
+        }
+
+        loadQuestion() {
+    const question = this.quizData[this.currentQuestion];
+    this.questionEl.textContent = `${this.currentQuestion + 1}. ${question.question}`;
+    
+    // Timer setup
+    const timerEl = document.getElementById('timer');
+    let timeLeft = 15; // 15 seconds per question
+    timerEl.textContent = `Time Left: ${timeLeft}s`;
+
+    // Clear previous timer if any
+    clearInterval(this.timerInterval);
+
+    this.timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Time Left: ${timeLeft}s`;
+
+        if (timeLeft <= 0) {
+            clearInterval(this.timerInterval);
+            this.timeExpired(); // Handle time expiration
+        }
+    }, 1000);
+
+    if (question.image) {
+        this.imageEl.src = question.image;
+        this.imageEl.style.display = "block";
+    } else {
+        this.imageEl.style.display = "none";
+    }
+
+    if (question.video) {
+        this.goalVideoContainer.style.display = 'block';
+        this.videoEl.play();
+    } else {
+        this.goalVideoContainer.style.display = 'none';
+    }
+
+    this.optionsEl.innerHTML = '';
+    question.options.forEach((option, index) => {
+        const optionEl = document.createElement('div');
+        optionEl.className = 'option';
+        optionEl.textContent = option;
+        optionEl.addEventListener('click', () => this.selectOption(index));
+        this.optionsEl.appendChild(optionEl);
+    });
+
+    this.submitBtn.disabled = true;
+    this.nextBtn.style.display = 'none';
+    this.selectedOption = null;
+}
+timeExpired() {
+    const correct = this.quizData[this.currentQuestion].correct;
+    const options = this.optionsEl.children;
+
+    if (this.selectedOption === null) {
+        // If no option was selected, highlight the correct answer
+        options[correct].className = 'option correct';
+    } else {
+        // If an incorrect answer was selected, handle it
+        this.checkAnswer();
+    }
+
+    this.submitBtn.disabled = true;
+
+    if (this.currentQuestion === this.quizData.length - 1) {
+        this.finishQuiz();
+    } else {
+        setTimeout(() => this.loadNextQuestion(), 2000); // Automatically move to the next question after 2 seconds
+    }
+}
+
+
+
+        selectOption(index) {
+            this.selectedOption = index;
+            this.submitBtn.disabled = false;
+
+            const options = this.optionsEl.children;
+            Array.from(options).forEach((option, i) => {
+                option.className = 'option' + (i === index ? ' selected' : '');
+            });
+        }
+
+        checkAnswer() {
+    const correct = this.quizData[this.currentQuestion].correct;
+    const options = this.optionsEl.children;
+    if (this.selectedOption === correct) {
+        this.score++;
+        options[this.selectedOption].className = 'option correct';
+    } else {
+        options[this.selectedOption].className = 'option incorrect';
+        options[correct].className = 'option correct';
+    }
+
+    this.submitBtn.disabled = true;
+
+    if (this.currentQuestion === this.quizData.length - 1) {
+        // Show Finish Quiz button at the last question
+        this.nextBtn.style.display = 'inline-block';
+        this.nextBtn.textContent = 'Finish Quiz';
+        this.nextBtn.onclick = () => this.finishQuiz();
+    } else {
+        setTimeout(() => this.loadNextQuestion(), 2000); // Automatically move to the next question after 2 seconds
+    }
+}
+
+        loadNextQuestion() {
+            this.currentQuestion++;
+            if (this.currentQuestion < this.quizData.length) {
+                this.loadQuestion();
+            } else {
+                this.finishQuiz();
+            }
+        }
+
+        finishQuiz() {
+            clearInterval(this.timerInterval); // Stop the timer
+            const percentage = (this.score / this.quizData.length) * 100;
+            const result = {
+                date: new Date().toLocaleString(),
+                score: this.score,
+                total: this.quizData.length,
+                percentage: percentage.toFixed(1)
+            };
+
+            let scores = [];
+            try {
+                scores = JSON.parse(localStorage.getItem('quizScores') || '[]');
+            } catch (error) {
+                console.error('Error loading scores:', error);
+            }
+
+            scores.push(result);
+            localStorage.setItem('quizScores', JSON.stringify(scores));
+
+            this.questionEl.textContent = `Quiz Complete! Your score: ${this.score}/${this.quizData.length} (${percentage.toFixed(1)}%)`;
+            this.optionsEl.innerHTML = '';
+            this.submitBtn.style.display = 'none';
+            this.nextBtn.style.display = 'inline-block';
+            this.nextBtn.textContent = 'Restart Quiz';
+            this.nextBtn.addEventListener('click', () => this.restartQuiz());
+
+            this.loadScores();
+        }
+
+        restartQuiz() {
+            clearInterval(this.timerInterval); // Stop the timer
+            this.currentQuestion = 0;
+            this.score = 0;
+            this.submitBtn.style.display = 'inline-block';
+            this.nextBtn.textContent = 'Next Question';
+            this.loadQuestion();
+        }
+
+        loadScores() {
+            const scores = JSON.parse(localStorage.getItem('quizScores') || '[]');
+            this.scoreListEl.innerHTML = '';
+
+            scores.slice(-5).reverse().forEach(score => {
+                const li = document.createElement('li');
+                li.textContent = `${score.date}: ${score.score}/${score.total} (${score.percentage}%)`;
+                this.scoreListEl.appendChild(li);
+            });
+        }
+    }
+
+    const quiz = new Quiz(quizData);
+</script>
+</body>
+</html>
